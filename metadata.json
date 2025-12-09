@@ -1,0 +1,5 @@
+{
+  "name": "InvoiceMind-AI",
+  "description": "An autonomous financial reasoning assistant that transforms invoices, chats, and bank records into clear financial insights and actionable steps.",
+  "requestFramePermissions": []
+}
