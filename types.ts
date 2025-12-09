@@ -27,6 +27,11 @@ export interface AnalysisResult {
   findings: string[];
   financialStats: FinancialStats;
   riskProfile: RiskProfile;
+  clientBehaviorAnalysis: string;
+  confidenceAssessment: {
+    level: 'High' | 'Medium' | 'Low';
+    reason: string;
+  };
   recommendedActions: ActionItem[];
 }
 

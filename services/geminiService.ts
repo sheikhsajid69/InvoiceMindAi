@@ -23,7 +23,7 @@ const fileToGenerativePart = async (file: File): Promise<{ inlineData: { data: s
 const responseSchema: Schema = {
   type: Type.OBJECT,
   properties: {
-    summary: { type: Type.STRING, description: "Executive summary of the financial situation." },
+    summary: { type: Type.STRING, description: "Executive summary of the financial situation (1-3 sentences)." },
     invoiceDetails: {
       type: Type.OBJECT,
       properties: {
@@ -37,7 +37,7 @@ const responseSchema: Schema = {
     findings: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: "Bullet points of key facts discovered."
+      description: "Bullet points of key facts discovered from cross-referencing files."
     },
     financialStats: {
       type: Type.OBJECT,
@@ -52,10 +52,22 @@ const responseSchema: Schema = {
       type: Type.OBJECT,
       properties: {
         level: { type: Type.STRING, enum: ["LOW", "MEDIUM", "HIGH"] },
-        description: { type: Type.STRING },
-        factor: { type: Type.NUMBER, description: "A number between 0 and 100 representing risk intensity." }
+        description: { type: Type.STRING, description: "Justification for the risk score." },
+        factor: { type: Type.NUMBER, description: "Risk intensity 0-100." }
       },
       required: ["level", "description", "factor"]
+    },
+    clientBehaviorAnalysis: {
+      type: Type.STRING,
+      description: "Inferred behavioral pattern (e.g., 'Consistently late', 'Reliable', 'Disputes frequently')."
+    },
+    confidenceAssessment: {
+      type: Type.OBJECT,
+      properties: {
+        level: { type: Type.STRING, enum: ["High", "Medium", "Low"] },
+        reason: { type: Type.STRING, description: "Why the AI is confident or uncertain (e.g., 'Missing bank records')." }
+      },
+      required: ["level", "reason"]
     },
     recommendedActions: {
       type: Type.ARRAY,
@@ -70,7 +82,7 @@ const responseSchema: Schema = {
       }
     }
   },
-  required: ["summary", "invoiceDetails", "findings", "financialStats", "riskProfile", "recommendedActions"]
+  required: ["summary", "invoiceDetails", "findings", "financialStats", "riskProfile", "clientBehaviorAnalysis", "confidenceAssessment", "recommendedActions"]
 };
 
 export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> => {
@@ -87,7 +99,7 @@ export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> =
   
   // Prompt
   const textPrompt = {
-    text: "Analyze these files (invoices, chats, or records). Extract the financial status, risk, and next steps."
+    text: "Analyze these financial documents. Connect the dots between invoices, chats, and bank records. Provide a reasoning-based assessment."
   };
 
   try {
@@ -101,7 +113,7 @@ export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> =
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: responseSchema,
-        temperature: 0.2, // Low temperature for factual extraction
+        temperature: 0.1, // Low temperature for factual, analytical output
       }
     });
 

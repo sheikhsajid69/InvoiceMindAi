@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnalysisResult, UploadedFile } from '../types';
-import { FileText, AlertTriangle, CheckCircle, ArrowRight, MessageSquare, Copy, X } from 'lucide-react';
+import { FileText, CheckCircle, ArrowRight, MessageSquare, Copy, X, Brain, ShieldAlert, AlertTriangle, File, Image as ImageIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface AnalysisViewProps {
@@ -19,6 +19,15 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
     { name: 'Overdue', value: data.financialStats.overdue },
   ];
 
+  const getActionLabel = (type: string) => {
+    switch (type) {
+      case 'REMINDER': return 'Payment Reminder';
+      case 'ESCALATION': return 'Escalation Strategy';
+      case 'SETTLEMENT': return 'Settlement Offer';
+      default: return type;
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
       {/* Left Column: Source Context */}
@@ -27,17 +36,35 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
           <h3 className="text-sm font-semibold text-gray-500 mb-3 uppercase tracking-wider">Source Files</h3>
           <div className="space-y-3">
             {files.map((file) => (
-              <div key={file.id} className="group relative border rounded-lg overflow-hidden">
+              <div key={file.id} className="group relative border rounded-lg overflow-hidden bg-gray-50 h-32 flex items-center justify-center">
                 {file.type === 'image' ? (
-                  <img src={file.preview} alt="Evidence" className="w-full h-32 object-cover opacity-90 group-hover:opacity-100 transition" />
+                  <>
+                    <img src={file.preview} alt="Evidence" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition" />
+                    <div className="absolute top-2 right-2 bg-white/90 text-purple-600 p-1 rounded-md shadow-sm">
+                      <ImageIcon size={14} />
+                    </div>
+                  </>
                 ) : (
-                  <div className="h-32 bg-gray-50 flex flex-col items-center justify-center text-gray-400">
-                    <FileText className="w-8 h-8 mb-2" />
-                    <span className="text-xs">{file.file.name}</span>
+                  <div className="flex flex-col items-center justify-center p-2 text-center w-full">
+                    {file.type === 'pdf' ? (
+                      <FileText className="w-10 h-10 mb-2 text-red-500" />
+                    ) : (
+                      <File className="w-10 h-10 mb-2 text-blue-400" />
+                    )}
+                    <span className="text-xs text-gray-500 font-medium px-2 truncate w-full">
+                      {file.file.name}
+                    </span>
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wide mt-1">
+                      {file.type === 'pdf' ? 'PDF Document' : 'File'}
+                    </span>
                   </div>
                 )}
-                <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">
-                  {file.file.name.length > 15 ? file.file.name.substring(0, 15) + '...' : file.file.name}
+                
+                {/* Overlay Name Badge for all types for better readability */}
+                <div className="absolute top-2 left-2 max-w-[70%]">
+                  <div className="bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm truncate">
+                    {file.file.name}
+                  </div>
                 </div>
               </div>
             ))}
@@ -52,18 +79,35 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
       <div className="lg:col-span-5 space-y-6">
         {/* Core Analysis Card */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse"></div>
-            <h2 className="text-lg font-bold text-gray-800">AI Reasoning</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="bg-blue-100 p-1.5 rounded-md text-blue-600">
+                 <Brain size={18} />
+              </div>
+              <h2 className="text-lg font-bold text-gray-800">AI Reasoning</h2>
+            </div>
+            <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${
+                data.confidenceAssessment.level === 'High' ? 'bg-green-50 text-green-700 border-green-200' :
+                data.confidenceAssessment.level === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                'bg-red-50 text-red-700 border-red-200'
+            }`}>
+              <span>Confidence: {data.confidenceAssessment.level}</span>
+            </div>
           </div>
           
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 mb-6">
-            <h3 className="font-semibold text-slate-800 mb-1">
-              Invoice {data.invoiceDetails.number}
+          <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 mb-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+            <h3 className="font-semibold text-slate-800 mb-2">
+              Analysis Summary
             </h3>
             <p className="text-slate-600 text-sm leading-relaxed">
               {data.summary}
             </p>
+            {/* Logic Trace / Reason for confidence */}
+            <div className="mt-3 pt-3 border-t border-slate-200">
+              <p className="text-xs text-slate-400 uppercase tracking-wide font-semibold mb-1">Reasoning Basis</p>
+              <p className="text-xs text-slate-500 italic">"{data.confidenceAssessment.reason}"</p>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -71,21 +115,19 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
               <h4 className="text-sm font-semibold text-gray-900 mb-2">Key Findings</h4>
               <ul className="space-y-2">
                 {data.findings.map((finding, idx) => (
-                  <li key={idx} className="flex items-start text-sm text-gray-600">
-                    <span className="mr-2 mt-1.5 h-1.5 w-1.5 bg-gray-400 rounded-full flex-shrink-0"></span>
-                    {finding}
+                  <li key={idx} className="flex items-start text-sm text-gray-600 bg-white border border-gray-100 p-2 rounded-md">
+                    <CheckCircle className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="leading-snug">{finding}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
             <div className="pt-4 border-t border-gray-100">
-              <h4 className="text-sm font-semibold text-gray-900 mb-2">Money Impact</h4>
-              <div className="flex items-center space-x-2 text-sm text-gray-700">
-                 <span className="font-mono font-medium bg-green-50 text-green-700 px-2 py-0.5 rounded">
-                   {data.financialStats.currency} {data.financialStats.expected.toLocaleString()}
-                 </span>
-                 <span>expected.</span>
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">Behavioral Intelligence</h4>
+              <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-sm text-indigo-800">
+                 <span className="font-semibold mr-1">Observed Pattern:</span>
+                 {data.clientBehaviorAnalysis}
               </div>
             </div>
           </div>
@@ -108,11 +150,11 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
             <div className="mt-4 flex justify-end space-x-3">
               <button 
                  onClick={() => navigator.clipboard.writeText(data.recommendedActions[selectedAction].draftContent)}
-                 className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-800"
+                 className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-800 transition"
               >
                 <Copy size={14} /> <span>Copy</span>
               </button>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
                 Open in Email
               </button>
             </div>
@@ -125,7 +167,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
         
         {/* Cash Flow Summary */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Cash Flow Summary</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Cash Flow Impact</h3>
           <div className="flex justify-between items-end mb-6">
              <div>
                <p className="text-xs text-gray-400 uppercase font-semibold">Overdue</p>
@@ -141,18 +183,19 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
              </div>
           </div>
           
-          <div className="h-40 w-full relative">
+          <div className="h-64 w-full relative">
              <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={chartData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={40}
-                  outerRadius={60}
+                  innerRadius={60}
+                  outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -181,7 +224,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
                  data.riskProfile.level === 'MEDIUM' ? 'text-yellow-600' : 'text-green-600'
                }`}>{data.riskProfile.level}</span>
              </div>
-             <div className="w-full bg-gray-200 rounded-full h-2.5">
+             <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                 <div 
                   className={`h-2.5 rounded-full transition-all duration-1000 ${
                     data.riskProfile.level === 'HIGH' ? 'bg-red-500' : 
@@ -191,9 +234,9 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
                 ></div>
              </div>
           </div>
-          <div className="flex items-start space-x-2 bg-red-50 p-3 rounded-lg border border-red-100">
-             <AlertTriangle className="text-red-500 w-5 h-5 flex-shrink-0 mt-0.5" />
-             <p className="text-sm text-red-700 leading-snug">{data.riskProfile.description}</p>
+          <div className="flex items-start space-x-3 bg-red-50 p-4 rounded-lg border border-red-100">
+             <ShieldAlert className="text-red-500 w-5 h-5 flex-shrink-0 mt-0.5" />
+             <p className="text-sm text-red-800 leading-snug">{data.riskProfile.description}</p>
           </div>
         </div>
 
@@ -211,13 +254,23 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
                >
                  <div className="flex items-center space-x-3">
                    <div className={`p-2 rounded-full ${
-                     action.type === 'ESCALATION' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                     action.type === 'ESCALATION' ? 'bg-red-100 text-red-600' : 
+                     action.type === 'SETTLEMENT' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
                    }`}>
                      <MessageSquare size={16} />
                    </div>
                    <div>
                      <p className="text-sm font-semibold text-gray-900">{action.title}</p>
-                     <p className="text-xs text-gray-500 capitalize">{action.type.toLowerCase()}</p>
+                     <div className="flex items-center gap-1.5 mt-0.5">
+                       <span className={`text-[10px] uppercase tracking-wider font-bold ${
+                         action.type === 'ESCALATION' ? 'text-red-600 bg-red-50 px-1.5 py-0.5 rounded' : 
+                         action.type === 'SETTLEMENT' ? 'text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded' : 
+                         'text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded'
+                       }`}>
+                         {getActionLabel(action.type)}
+                       </span>
+                       <span className="text-xs text-gray-400">Click to view draft</span>
+                     </div>
                    </div>
                  </div>
                  <ArrowRight size={16} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
