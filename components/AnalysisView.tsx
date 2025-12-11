@@ -28,6 +28,14 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
     }
   };
 
+  const getActionColor = (type: string) => {
+    switch (type) {
+      case 'ESCALATION': return 'red';
+      case 'SETTLEMENT': return 'purple';
+      default: return 'blue';
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
       {/* Left Column: Source Context */}
@@ -36,7 +44,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
           <h3 className="text-sm font-semibold text-gray-500 mb-3 uppercase tracking-wider">Source Files</h3>
           <div className="space-y-3">
             {files.map((file) => (
-              <div key={file.id} className="group relative border rounded-lg overflow-hidden bg-gray-50 h-32 flex items-center justify-center">
+              <div key={file.id} className="group relative border rounded-lg overflow-hidden bg-gray-50 h-32 flex items-center justify-center transition-all hover:shadow-md">
                 {file.type === 'image' ? (
                   <>
                     <img src={file.preview} alt="Evidence" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition" />
@@ -45,7 +53,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
                     </div>
                   </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center p-2 text-center w-full">
+                  <div className="flex flex-col items-center justify-center p-2 text-center w-full h-full">
                     {file.type === 'pdf' ? (
                       <FileText className="w-10 h-10 mb-2 text-red-500" />
                     ) : (
@@ -54,8 +62,8 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
                     <span className="text-xs text-gray-500 font-medium px-2 truncate w-full">
                       {file.file.name}
                     </span>
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wide mt-1">
-                      {file.type === 'pdf' ? 'PDF Document' : 'File'}
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wide mt-1 font-semibold">
+                      {file.type === 'pdf' ? 'PDF Document' : 'File Attachment'}
                     </span>
                   </div>
                 )}
@@ -69,7 +77,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
               </div>
             ))}
           </div>
-          <button onClick={onReset} className="w-full mt-4 text-xs text-gray-400 hover:text-gray-600 underline">
+          <button onClick={onReset} className="w-full mt-4 text-xs text-gray-400 hover:text-gray-600 underline text-center">
             Clear & Upload New
           </button>
         </div>
@@ -185,7 +193,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
           
           <div className="h-64 w-full relative">
              <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <PieChart margin={{ top: 20, right: 30, left: 30, bottom: 20 }}>
                 <Pie
                   data={chartData}
                   cx="50%"
@@ -195,7 +203,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, value }) => `${name}: ${data.financialStats.currency}${value.toLocaleString()}`}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -244,38 +252,40 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
            <h3 className="text-lg font-bold text-gray-800 mb-4">Recommended Actions</h3>
            <div className="space-y-3">
-             {data.recommendedActions.map((action, idx) => (
-               <button 
-                 key={idx}
-                 onClick={() => setSelectedAction(idx)}
-                 className={`w-full text-left p-3 rounded-lg border transition-all flex justify-between items-center group ${
-                    selectedAction === idx ? 'border-blue-500 ring-1 ring-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                 }`}
-               >
-                 <div className="flex items-center space-x-3">
-                   <div className={`p-2 rounded-full ${
-                     action.type === 'ESCALATION' ? 'bg-red-100 text-red-600' : 
-                     action.type === 'SETTLEMENT' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
-                   }`}>
-                     <MessageSquare size={16} />
-                   </div>
-                   <div>
-                     <p className="text-sm font-semibold text-gray-900">{action.title}</p>
-                     <div className="flex items-center gap-1.5 mt-0.5">
-                       <span className={`text-[10px] uppercase tracking-wider font-bold ${
-                         action.type === 'ESCALATION' ? 'text-red-600 bg-red-50 px-1.5 py-0.5 rounded' : 
-                         action.type === 'SETTLEMENT' ? 'text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded' : 
-                         'text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded'
-                       }`}>
-                         {getActionLabel(action.type)}
-                       </span>
-                       <span className="text-xs text-gray-400">Click to view draft</span>
+             {data.recommendedActions.map((action, idx) => {
+               const color = getActionColor(action.type);
+               const colorClasses = {
+                 blue: { bg: 'bg-blue-100', text: 'text-blue-600', badgeBg: 'bg-blue-50' },
+                 red: { bg: 'bg-red-100', text: 'text-red-600', badgeBg: 'bg-red-50' },
+                 purple: { bg: 'bg-purple-100', text: 'text-purple-600', badgeBg: 'bg-purple-50' },
+               }[color];
+
+               return (
+                 <button 
+                   key={idx}
+                   onClick={() => setSelectedAction(idx)}
+                   className={`w-full text-left p-3 rounded-lg border transition-all flex justify-between items-center group ${
+                      selectedAction === idx ? `border-${color}-500 ring-1 ring-${color}-500 bg-${color}-50` : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                   }`}
+                 >
+                   <div className="flex items-center space-x-3">
+                     <div className={`p-2 rounded-full ${colorClasses.bg} ${colorClasses.text}`}>
+                       <MessageSquare size={16} />
+                     </div>
+                     <div>
+                       <p className="text-sm font-semibold text-gray-900">{action.title}</p>
+                       <div className="flex items-center gap-1.5 mt-0.5">
+                         <span className={`text-[10px] uppercase tracking-wider font-bold ${colorClasses.text} ${colorClasses.badgeBg} px-1.5 py-0.5 rounded`}>
+                           {getActionLabel(action.type)}
+                         </span>
+                         <span className="text-xs text-gray-400">Click to view draft</span>
+                       </div>
                      </div>
                    </div>
-                 </div>
-                 <ArrowRight size={16} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
-               </button>
-             ))}
+                   <ArrowRight size={16} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
+                 </button>
+               );
+             })}
            </div>
         </div>
 
