@@ -41,3 +41,10 @@ export interface UploadedFile {
   preview: string;
   type: 'image' | 'pdf' | 'other';
 }
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: Date;
+}

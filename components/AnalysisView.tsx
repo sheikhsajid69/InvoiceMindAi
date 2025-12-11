@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AnalysisResult, UploadedFile } from '../types';
 import { FileText, CheckCircle, ArrowRight, MessageSquare, Copy, X, Brain, ShieldAlert, AlertTriangle, File, Image as ImageIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { ChatWidget } from './ChatWidget';
 
 interface AnalysisViewProps {
   data: AnalysisResult;
@@ -37,7 +38,10 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full relative">
+      {/* Floating Chat Widget */}
+      <ChatWidget context={data} />
+
       {/* Left Column: Source Context */}
       <div className="lg:col-span-3 space-y-4">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">

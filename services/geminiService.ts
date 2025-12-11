@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
+import { GoogleGenAI, Type, Schema, Chat } from "@google/genai";
 import { AnalysisResult } from "../types";
 import { SYSTEM_INSTRUCTION } from "../constants";
 
@@ -126,4 +126,44 @@ export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> =
     console.error("Analysis failed:", error);
     throw error;
   }
+};
+
+export const createChatSession = (context: AnalysisResult): Chat => {
+  if (!process.env.API_KEY) {
+    throw new Error("API Key is missing.");
+  }
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  const contextString = `
+    CURRENT ANALYSIS CONTEXT:
+    Summary: ${context.summary}
+    Financials: Expected ${context.financialStats.expected}, Overdue ${context.financialStats.overdue} ${context.financialStats.currency}.
+    Risk Level: ${context.riskProfile.level} - ${context.riskProfile.description}.
+    Client Behavior: ${context.clientBehaviorAnalysis}
+    Findings:
+    ${context.findings.map(f => `- ${f}`).join('\n')}
+    Recommended Actions:
+    ${context.recommendedActions.map(a => `- ${a.title} (${a.type})`).join('\n')}
+  `;
+
+  return ai.chats.create({
+    model: 'gemini-3-pro-preview',
+    config: {
+      systemInstruction: `${SYSTEM_INSTRUCTION}
+
+      SPECIFIC INSTRUCTIONS FOR CHAT:
+      You are now in an interactive chat session regarding the specific analysis above.
+      
+      CONTEXT:
+      ${contextString}
+
+      YOUR GOAL:
+      Help the user take action.
+      - If asked to write an email, use the tone appropriate for the Risk Level (Low=Gentle, High=Firm).
+      - If asked about risks, explain using the findings.
+      - If asked "what should I do?", prioritize the Recommended Actions.
+      
+      Keep answers concise and conversational.`,
+    }
+  });
 };
