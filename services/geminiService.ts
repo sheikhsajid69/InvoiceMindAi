@@ -90,9 +90,16 @@ export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> =
     throw new Error("API Key is missing. Please set process.env.API_KEY.");
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({
+    apiKey: process.env.API_KEY,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  });
   
-  const model = "gemini-2.5-flash";
+  const model = "gemini-3.5-flash";
   
   // Prepare parts
   const fileParts = await Promise.all(files.map(fileToGenerativePart));
@@ -132,7 +139,14 @@ export const createChatSession = (context: AnalysisResult): Chat => {
   if (!process.env.API_KEY) {
     throw new Error("API Key is missing.");
   }
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({
+    apiKey: process.env.API_KEY,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  });
 
   const contextString = `
     CURRENT ANALYSIS CONTEXT:
@@ -147,7 +161,7 @@ export const createChatSession = (context: AnalysisResult): Chat => {
   `;
 
   return ai.chats.create({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3.5-flash',
     config: {
       systemInstruction: `${SYSTEM_INSTRUCTION}
 

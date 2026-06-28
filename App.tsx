@@ -1,8 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, X, Loader2, FileText, Bot } from 'lucide-react';
+import { Upload, X, Loader2, FileText, Bot, Sparkles, Zap, Play } from 'lucide-react';
 import { analyzeDocuments } from './services/geminiService';
 import { AnalysisResult, UploadedFile } from './types';
 import { AnalysisView } from './components/AnalysisView';
+import { DEMO_SCENARIOS } from './services/demoData';
 
 export default function App() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -69,6 +70,48 @@ export default function App() {
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const loadDemoFiles = (scenarioId: string) => {
+    const scenario = DEMO_SCENARIOS.find(s => s.id === scenarioId);
+    if (!scenario) return;
+
+    const newFiles = scenario.files.map(f => {
+      const fileObj = new File([`Simulated content for ${f.name}`], f.name, {
+        type: f.type === 'pdf' ? 'application/pdf' : f.type === 'image' ? 'image/png' : 'text/plain'
+      });
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        file: fileObj,
+        type: f.type,
+        preview: f.type === 'image' ? 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=300&q=80' : ''
+      } as UploadedFile;
+    });
+
+    setFiles(newFiles);
+    setAnalysisResult(null);
+    setError(null);
+  };
+
+  const loadInstantDemo = (scenarioId: string) => {
+    const scenario = DEMO_SCENARIOS.find(s => s.id === scenarioId);
+    if (!scenario) return;
+
+    const newFiles = scenario.files.map(f => {
+      const fileObj = new File([`Simulated content for ${f.name}`], f.name, {
+        type: f.type === 'pdf' ? 'application/pdf' : f.type === 'image' ? 'image/png' : 'text/plain'
+      });
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        file: fileObj,
+        type: f.type,
+        preview: f.type === 'image' ? 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=300&q=80' : ''
+      } as UploadedFile;
+    });
+
+    setFiles(newFiles);
+    setAnalysisResult(scenario.result);
+    setError(null);
   };
 
   return (
@@ -198,9 +241,71 @@ export default function App() {
             
             {/* Demo Hint */}
             {!files.length && !process.env.API_KEY && (
-               <div className="text-center text-xs text-yellow-600 mt-4 bg-yellow-50 p-2 rounded">
-                 Note: Ensure <code>process.env.API_KEY</code> is set to a valid Gemini API key to run analysis.
+               <div className="text-center text-xs text-yellow-600 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                 Note: To analyze your own custom documents, ensure a valid Gemini API key is set in your environment. Otherwise, explore our instant cases below.
                </div>
+            )}
+
+            {/* Interactive Demo Cases Dashboard */}
+            {!files.length && (
+              <div className="pt-8 border-t border-gray-200 mt-8 space-y-4">
+                <div className="flex items-center space-x-2 text-gray-800">
+                  <Sparkles className="w-5 h-5 text-blue-600 animate-pulse" />
+                  <h2 className="text-lg font-bold tracking-tight">Explore Pre-loaded Scenarios</h2>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Select an interactive case to immediately explore the financial reasoning engine and communication assistant.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {DEMO_SCENARIOS.map((scenario) => {
+                    const isHigh = scenario.result.riskProfile.level === 'HIGH';
+                    const isMed = scenario.result.riskProfile.level === 'MEDIUM';
+                    return (
+                      <div key={scenario.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start">
+                            <h3 className="font-bold text-sm text-gray-900 leading-snug">{scenario.title}</h3>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                              isHigh ? 'bg-red-50 text-red-700 border border-red-100' :
+                              isMed ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
+                              'bg-green-50 text-green-700 border border-green-100'
+                            }`}>
+                              {scenario.result.riskProfile.level} Risk
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">{scenario.description}</p>
+                          <div className="pt-2">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Simulated Documents</span>
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                              {scenario.files.map((f, fi) => (
+                                <span key={fi} className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded truncate max-w-[150px]" title={f.name}>
+                                  📄 {f.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                          <button 
+                            onClick={() => loadDemoFiles(scenario.id)}
+                            className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-[11px] py-1.5 px-2 rounded-lg font-medium transition text-center flex items-center justify-center space-x-1"
+                          >
+                            <Play size={10} />
+                            <span>Load Files</span>
+                          </button>
+                          <button 
+                            onClick={() => loadInstantDemo(scenario.id)}
+                            className="bg-blue-600 text-white hover:bg-blue-700 text-[11px] py-1.5 px-2 rounded-lg font-medium transition text-center flex items-center justify-center space-x-1 shadow-sm"
+                          >
+                            <Zap size={10} />
+                            <span>Instant Demo</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
         )}

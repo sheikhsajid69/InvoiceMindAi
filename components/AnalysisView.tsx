@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnalysisResult, UploadedFile } from '../types';
-import { FileText, CheckCircle, ArrowRight, MessageSquare, Copy, X, Brain, ShieldAlert, AlertTriangle, File, Image as ImageIcon } from 'lucide-react';
+import { FileText, CheckCircle, ArrowRight, MessageSquare, Copy, X, Brain, ShieldAlert, AlertTriangle, File, Image as ImageIcon, Download, Check, Mail } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { ChatWidget } from './ChatWidget';
 
@@ -14,6 +14,74 @@ const COLORS = ['#10B981', '#EF4444']; // Green for Expected, Red for Overdue
 
 export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset }) => {
   const [selectedAction, setSelectedAction] = useState<number | null>(null);
+  const [editedDraft, setEditedDraft] = useState<string>('');
+  const [copied, setCopied] = useState(false);
+
+  const handleSelectAction = (idx: number) => {
+    setSelectedAction(idx);
+    setEditedDraft(data.recommendedActions[idx].draftContent);
+    setCopied(false);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(editedDraft);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleOpenEmail = () => {
+    if (selectedAction === null) return;
+    const action = data.recommendedActions[selectedAction];
+    const subject = encodeURIComponent(action.title);
+    const body = encodeURIComponent(editedDraft);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
+  const handleExportMarkdown = () => {
+    const markdownContent = `# InvoiceMind AI Financial Analysis Report
+Generated on: ${new Date().toLocaleDateString()}
+
+## Executive Summary
+${data.summary}
+
+## Confidence Assessment
+- Level: **${data.confidenceAssessment.level}**
+- Basis: *"${data.confidenceAssessment.reason}"*
+
+## Financial Highlights
+- **Invoice Number**: ${data.invoiceDetails.number}
+- **Due Date**: ${data.invoiceDetails.dueDate}
+- **Invoice Amount**: ${data.financialStats.currency}${data.invoiceDetails.amount}
+- **Status**: ${data.invoiceDetails.status}
+- **Expected Cash Flow**: ${data.financialStats.currency}${data.financialStats.expected.toLocaleString()}
+- **Overdue Cash Flow**: ${data.financialStats.currency}${data.financialStats.overdue.toLocaleString()}
+
+## Key Findings
+${data.findings.map(f => `- ${f}`).join('\n')}
+
+## Risk Assessment
+- **Risk Level**: **${data.riskProfile.level}** (Score: ${data.riskProfile.factor}/100)
+- **Justification**: ${data.riskProfile.description}
+- **Client Behavior Analysis**: ${data.clientBehaviorAnalysis}
+
+## Recommended Actions
+${data.recommendedActions.map((action, idx) => `### ${idx + 1}. ${action.title} (${action.type})
+\`\`\`
+${action.draftContent}
+\`\`\`
+`).join('\n')}
+`;
+
+    const blob = new Blob([markdownContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `InvoiceMind_Analysis_${data.invoiceDetails.number || 'Report'}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const chartData = [
     { name: 'Expected', value: data.financialStats.expected },
@@ -91,19 +159,29 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
       <div className="lg:col-span-5 space-y-6">
         {/* Core Analysis Card */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <div className="flex items-center space-x-2">
               <div className="bg-blue-100 p-1.5 rounded-md text-blue-600">
                  <Brain size={18} />
               </div>
               <h2 className="text-lg font-bold text-gray-800">AI Reasoning</h2>
             </div>
-            <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${
-                data.confidenceAssessment.level === 'High' ? 'bg-green-50 text-green-700 border-green-200' :
-                data.confidenceAssessment.level === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                'bg-red-50 text-red-700 border-red-200'
-            }`}>
-              <span>Confidence: {data.confidenceAssessment.level}</span>
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={handleExportMarkdown}
+                className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-medium transition"
+                title="Export analysis to Markdown document"
+              >
+                <Download size={13} />
+                <span>Export Report</span>
+              </button>
+              <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${
+                  data.confidenceAssessment.level === 'High' ? 'bg-green-50 text-green-700 border-green-200' :
+                  data.confidenceAssessment.level === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                  'bg-red-50 text-red-700 border-red-200'
+              }`}>
+                <span>Confidence: {data.confidenceAssessment.level}</span>
+              </div>
             </div>
           </div>
           
@@ -154,21 +232,34 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
             >
               <X size={18} />
             </button>
-            <h3 className="font-semibold text-gray-800 mb-1">Draft: {data.recommendedActions[selectedAction].title}</h3>
-            <p className="text-xs text-gray-400 mb-4">Review before sending</p>
-            <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 whitespace-pre-wrap font-mono leading-relaxed border border-gray-200">
-              {data.recommendedActions[selectedAction].draftContent}
-            </div>
-            <div className="mt-4 flex justify-end space-x-3">
-              <button 
-                 onClick={() => navigator.clipboard.writeText(data.recommendedActions[selectedAction].draftContent)}
-                 className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-800 transition"
-              >
-                <Copy size={14} /> <span>Copy</span>
-              </button>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
-                Open in Email
-              </button>
+            <h3 className="font-semibold text-gray-800 mb-1">Draft Editor: {data.recommendedActions[selectedAction].title}</h3>
+            <p className="text-xs text-gray-400 mb-3">You can customize this message before copying or sending.</p>
+            <textarea 
+              value={editedDraft}
+              onChange={(e) => setEditedDraft(e.target.value)}
+              className="w-full h-64 bg-gray-50 p-4 rounded-lg text-sm text-gray-700 font-mono leading-relaxed border border-gray-200 focus:ring-1 focus:ring-blue-500 focus:bg-white focus:outline-none resize-none"
+            />
+            <div className="mt-4 flex justify-between items-center">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
+                Characters: {editedDraft.length}
+              </span>
+              <div className="flex space-x-3">
+                <button 
+                   onClick={handleCopy}
+                   className={`flex items-center space-x-1 text-sm px-3 py-1.5 rounded-lg border transition ${
+                     copied ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white hover:bg-gray-50 text-gray-600 border-gray-200'
+                   }`}
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />} 
+                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                </button>
+                <button 
+                  onClick={handleOpenEmail}
+                  className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm flex items-center space-x-1"
+                >
+                  <Mail size={14} /> <span>Open in Email</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -267,7 +358,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ data, files, onReset
                return (
                  <button 
                    key={idx}
-                   onClick={() => setSelectedAction(idx)}
+                   onClick={() => handleSelectAction(idx)}
                    className={`w-full text-left p-3 rounded-lg border transition-all flex justify-between items-center group ${
                       selectedAction === idx ? `border-${color}-500 ring-1 ring-${color}-500 bg-${color}-50` : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                    }`}
