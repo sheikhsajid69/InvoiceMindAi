@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, X, Loader2, FileText, Bot, Sparkles, Zap, Play } from 'lucide-react';
+import { Upload, X, Loader2, FileText, Bot, Sparkles, Zap, Play, Settings, Key } from 'lucide-react';
 import { analyzeDocuments } from './services/geminiService';
 import { AnalysisResult, UploadedFile } from './types';
 import { AnalysisView } from './components/AnalysisView';
@@ -11,6 +11,16 @@ export default function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem("GEMINI_API_KEY") || "" : "";
+  });
+  const [hasApiKey, setHasApiKey] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !!localStorage.getItem("GEMINI_API_KEY") || !!process.env.API_KEY;
+    }
+    return !!process.env.API_KEY;
+  });
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -130,6 +140,15 @@ export default function App() {
                <span className="w-2 h-2 rounded-full bg-green-500"></span>
                <span>System Operational</span>
             </div>
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2 text-gray-500 hover:text-blue-600 rounded-lg hover:bg-gray-100 transition flex items-center space-x-1.5 text-sm font-medium"
+              title="API Key Settings"
+            >
+              <Settings size={20} className="hover:rotate-45 transition-transform duration-300" />
+              <span className="hidden sm:inline">Settings</span>
+            </button>
+
             <button className="p-2 text-gray-400 hover:text-gray-600">
               <span className="sr-only">Menu</span>
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -240,9 +259,16 @@ export default function App() {
             )}
             
             {/* Demo Hint */}
-            {!files.length && !process.env.API_KEY && (
-               <div className="text-center text-xs text-yellow-600 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                 Note: To analyze your own custom documents, ensure a valid Gemini API key is set in your environment. Otherwise, explore our instant cases below.
+            {!files.length && !hasApiKey && (
+               <div className="text-center text-xs text-yellow-600 bg-yellow-50 p-4 rounded-lg border border-yellow-200 flex flex-col items-center space-y-2">
+                 <span>Note: To analyze your own custom documents, you need to set your Gemini API Key. Click the Settings button in the header to configure it.</span>
+                 <button 
+                   onClick={() => setIsSettingsOpen(true)}
+                   className="inline-flex items-center space-x-1 text-blue-600 font-semibold hover:underline"
+                 >
+                   <Key size={12} />
+                   <span>Configure API Key Now</span>
+                 </button>
                </div>
             )}
 
@@ -310,6 +336,102 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* API Key Settings Modal */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsSettingsOpen(false)}></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200">
+              <div className="bg-white px-6 pt-6 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-50 text-blue-600 sm:mx-0 sm:h-10 sm:w-10">
+                    <Key className="h-6 w-6" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                    <h3 className="text-lg leading-6 font-semibold text-gray-900" id="modal-title">
+                      Gemini API Key Settings
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        To analyze your own files, please enter your personal Gemini API key. The key is stored locally in your browser's secure local storage (`localStorage`) and is only used to connect directly to the Google Gemini API.
+                      </p>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <label htmlFor="api-key" className="block text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          Gemini API Key
+                        </label>
+                        <a 
+                          href="https://aistudio.google.com/" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-xs text-blue-600 hover:text-blue-700 hover:underline flex items-center space-x-0.5"
+                        >
+                          <span>Get API Key from Google AI Studio</span>
+                          <span className="text-[10px]">↗</span>
+                        </a>
+                      </div>
+                      <input
+                        type="password"
+                        id="api-key"
+                        value={apiKeyInput}
+                        onChange={(e) => setApiKeyInput(e.target.value)}
+                        placeholder="AIzaSy..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
+                      {process.env.API_KEY && (
+                        <p className="text-xs text-green-605 flex items-center mt-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                          A build-time default API key is configured.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-6 py-4 flex flex-row-reverse space-x-2 space-x-reverse">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (apiKeyInput.trim()) {
+                      localStorage.setItem("GEMINI_API_KEY", apiKeyInput.trim());
+                    } else {
+                      localStorage.removeItem("GEMINI_API_KEY");
+                    }
+                    setIsSettingsOpen(false);
+                    window.location.reload();
+                  }}
+                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Save Settings
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem("GEMINI_API_KEY");
+                    setApiKeyInput("");
+                    setIsSettingsOpen(false);
+                    window.location.reload();
+                  }}
+                  className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
+                >
+                  Clear Key
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(false)}
+                  className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -85,13 +85,22 @@ const responseSchema: Schema = {
   required: ["summary", "invoiceDetails", "findings", "financialStats", "riskProfile", "clientBehaviorAnalysis", "confidenceAssessment", "recommendedActions"]
 };
 
+const getApiKey = (): string | null => {
+  if (typeof window !== 'undefined') {
+    const localKey = window.localStorage.getItem("GEMINI_API_KEY");
+    if (localKey) return localKey;
+  }
+  return process.env.API_KEY || null;
+};
+
 export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key is missing. Please set process.env.API_KEY.");
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please set your Gemini API key in the settings menu.");
   }
 
   const ai = new GoogleGenAI({
-    apiKey: process.env.API_KEY,
+    apiKey: apiKey,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
@@ -136,11 +145,12 @@ export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> =
 };
 
 export const createChatSession = (context: AnalysisResult): Chat => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key is missing.");
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please set your Gemini API key in the settings menu.");
   }
   const ai = new GoogleGenAI({
-    apiKey: process.env.API_KEY,
+    apiKey: apiKey,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
