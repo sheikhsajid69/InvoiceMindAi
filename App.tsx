@@ -21,6 +21,8 @@ export default function App() {
     }
     return !!process.env.API_KEY;
   });
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -130,9 +132,7 @@ export default function App() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-             <div className="bg-blue-600 p-1.5 rounded-lg text-white">
-                <Bot size={24} />
-             </div>
+             <img src="/logo.png" alt="InvoiceMind AI Logo" className="w-8 h-8 object-contain rounded-lg shadow-sm" />
              <span className="text-xl font-bold tracking-tight text-gray-900">InvoiceMind AI</span>
           </div>
           <div className="flex items-center space-x-4">
@@ -337,6 +337,113 @@ export default function App() {
         )}
       </main>
 
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 py-12 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Brand column */}
+            <div className="md:col-span-2 space-y-4">
+              <div className="flex items-center space-x-3">
+                <img src="/logo.png" alt="InvoiceMind AI" className="w-8 h-8 object-contain rounded-lg" />
+                <span className="text-lg font-bold tracking-tight text-gray-900">InvoiceMind AI</span>
+              </div>
+              <p className="text-sm text-gray-500 max-w-sm">
+                An autonomous financial reasoning assistant that transforms invoices, chat messages, and bank records into clear, actionable financial insights.
+              </p>
+            </div>
+            
+            {/* Quick Links Column */}
+            <div>
+              <h4 className="text-xs font-bold text-gray-450 uppercase tracking-wider">Resources</h4>
+              <ul className="mt-4 space-y-2.5">
+                <li>
+                  <a 
+                    href="https://github.com/sheikhsajid69/InvoiceMindAi" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-sm text-gray-600 hover:text-blue-600 transition"
+                  >
+                    GitHub Repository
+                  </a>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setIsTermsOpen(true)} 
+                    className="text-sm text-gray-600 hover:text-blue-600 transition text-left"
+                  >
+                    Terms & Conditions
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setIsPrivacyOpen(true)} 
+                    className="text-sm text-gray-600 hover:text-blue-600 transition text-left"
+                  >
+                    Privacy Policy
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Social Profile Column */}
+            <div>
+              <h4 className="text-xs font-bold text-gray-450 uppercase tracking-wider">Connect</h4>
+              <div className="mt-4 flex space-x-4 text-gray-500">
+                <a 
+                  href="https://linkedin.com/in/sheikhsajid69" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-blue-600 transition" 
+                  title="LinkedIn"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fillRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clipRule="evenodd" />
+                  </svg>
+                </a>
+                <a 
+                  href="https://github.com/sheikhsajid69" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-gray-900 transition" 
+                  title="GitHub"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                  </svg>
+                </a>
+                <a 
+                  href="https://leetcode.com/sheikhsajid69" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-yellow-600 transition" 
+                  title="LeetCode"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M13.483 0a1.39 1.39 0 0 0-.961.411l-9.62 9.633a1.39 1.39 0 0 0 0 1.964l1.8 1.8a1.39 1.39 0 0 0 1.964 0L15.22 5.257l1.8 1.8a1.39 1.39 0 0 0 1.964 0l1.8-1.8a1.39 1.39 0 0 0 0-1.964L14.444.411A1.39 1.39 0 0 0 13.483 0zm-8.62 12.632l-1.8-1.8a1.39 1.39 0 0 0-1.964 0L.411 11.494a1.39 1.39 0 0 0 0 1.964l9.62 9.632a1.39 1.39 0 0 0 1.964 0l1.8-1.8a1.39 1.39 0 0 0 0-1.964l-9.62-9.632z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://x.com/sheikhsajid69" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-gray-900 transition" 
+                  title="X (Twitter)"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8 pt-8 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-400">
+            <p>&copy; {new Date().getFullYear()} InvoiceMind AI. All rights reserved.</p>
+            <p className="mt-2 sm:mt-0">Designed with ❤️ by <a href="https://github.com/sheikhsajid69" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition font-medium">Sheikh Sajid</a></p>
+          </div>
+        </div>
+      </footer>
+
       {/* API Key Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -346,7 +453,7 @@ export default function App() {
             <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200">
               <div className="bg-white px-6 pt-6 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-50 text-blue-600 sm:mx-0 sm:h-10 sm:w-10">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-50 text-blue-650 sm:mx-0 sm:h-10 sm:w-10">
                     <Key className="h-6 w-6" />
                   </div>
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
@@ -354,7 +461,7 @@ export default function App() {
                       Gemini API Key Settings
                     </h3>
                     <div className="mt-2">
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-505">
                         To analyze your own files, please enter your personal Gemini API key. The key is stored locally in your browser's secure local storage (`localStorage`) and is only used to connect directly to the Google Gemini API.
                       </p>
                     </div>
@@ -416,7 +523,7 @@ export default function App() {
                     setIsSettingsOpen(false);
                     window.location.reload();
                   }}
-                  className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
+                  className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-705 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
                 >
                   Clear Key
                 </button>
@@ -426,6 +533,103 @@ export default function App() {
                   className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Terms & Conditions Modal */}
+      {isTermsOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsTermsOpen(false)}></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-200">
+              <div className="bg-white px-6 pt-6 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                    <h3 className="text-xl font-bold text-gray-900 border-b pb-3" id="modal-title">
+                      Terms & Conditions
+                    </h3>
+                    <div className="mt-4 text-sm text-gray-600 space-y-4 max-h-96 overflow-y-auto pr-2">
+                      <p className="font-semibold text-gray-800">Welcome to InvoiceMind AI!</p>
+                      <p>These terms and conditions outline the rules and regulations for the use of InvoiceMind AI's Website and Application, hosted at `imai.sheikhsajid69.qzz.io`.</p>
+                      
+                      <h4 className="font-bold text-gray-800">1. Acceptance of Terms</h4>
+                      <p>By accessing this website, we assume you accept these terms and conditions in full. Do not continue to use InvoiceMind AI if you do not agree to all of the terms and conditions stated on this page.</p>
+                      
+                      <h4 className="font-bold text-gray-800">2. Description of Service</h4>
+                      <p>InvoiceMind AI is an AI-powered financial reasoning assistant designed to cross-reference invoices, bank transactions, and chat correspondence to extract insights. The application is run client-side. The API requests are sent directly to Google's Gemini API endpoints using your provided API key or fallback mechanisms.</p>
+                      
+                      <h4 className="font-bold text-gray-800">3. API Key & Security</h4>
+                      <p>You are responsible for obtaining your own API key for the Google Gemini API to use custom document analysis. Your API key is stored locally in your browser's secure `localStorage` and is never sent to any third-party servers, nor is it stored by us. You retain full responsibility for the usage and billing associated with your API key.</p>
+                      
+                      <h4 className="font-bold text-gray-800">4. Limitation of Liability</h4>
+                      <p>The calculations, assessments, risk scores, and email drafts generated by InvoiceMind AI are for informational purposes only. They do not constitute formal accounting, legal, or financial advice. We shall not be held liable for any financial decisions, errors, or losses resulting from the use of this application.</p>
+                      
+                      <h4 className="font-bold text-gray-800">5. Open Source License</h4>
+                      <p>InvoiceMind AI is licensed under the MIT License. You may modify, distribute, and use the software in accordance with the terms of the MIT License.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-6 py-4 flex flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={() => setIsTermsOpen(false)}
+                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:text-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy Policy Modal */}
+      {isPrivacyOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsPrivacyOpen(false)}></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-200">
+              <div className="bg-white px-6 pt-6 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                    <h3 className="text-xl font-bold text-gray-900 border-b pb-3" id="modal-title">
+                      Privacy Policy
+                    </h3>
+                    <div className="mt-4 text-sm text-gray-650 space-y-4 max-h-96 overflow-y-auto pr-2">
+                      <p>Your privacy is of critical importance to us. This Privacy Policy document describes how your data is handled by InvoiceMind AI.</p>
+                      
+                      <h4 className="font-bold text-gray-800">1. Client-Side Only Processing</h4>
+                      <p>InvoiceMind AI is built as a static client-side web application. All document processing, text parsing, and file conversions occur directly inside your browser. No files, documents, or data you upload are ever transmitted to or stored on our servers.</p>
+                      
+                      <h4 className="font-bold text-gray-800">2. Google Gemini API Interaction</h4>
+                      <p>When you select and analyze financial documents, the data is sent directly from your browser to Google Gemini API endpoints. Google's processing of your data is governed by the Google APIs Terms of Service and their AI developer privacy policies.</p>
+                      
+                      <h4 className="font-bold text-gray-800">3. API Key Storage</h4>
+                      <p>If you enter your own Gemini API key, it is stored in your browser's local storage (`localStorage`). This is local to your device and browser, and is never shared, sent, or uploaded to any other server except Google's secure API endpoints.</p>
+                      
+                      <h4 className="font-bold text-gray-800">4. Local Data Retention</h4>
+                      <p>All analysis results and interactive chat messages are kept in active React state memory and are discarded once you close or reload the browser page, or click "Clear All".</p>
+                      
+                      <h4 className="font-bold text-gray-800">5. Contact Information</h4>
+                      <p>If you have any questions about this Privacy Policy, feel free to contact us via our GitHub repository issues page.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-6 py-4 flex flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={() => setIsPrivacyOpen(false)}
+                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:text-sm"
+                >
+                  Close
                 </button>
               </div>
             </div>
