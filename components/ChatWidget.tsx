@@ -15,6 +15,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ context }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [chatSession, setChatSession] = useState<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasFallenBackRef = useRef(false);
 
   useEffect(() => {
     // Initialize chat session when context changes or widget loads
@@ -69,8 +70,40 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ context }) => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMsg]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chat error", error);
+      
+      const errorMsgText = error.message || "";
+      const isUnavailable = errorMsgText.includes("503") || 
+                            errorMsgText.includes("UNAVAILABLE") || 
+                            errorMsgText.includes("high demand") ||
+                            errorMsgText.includes("temporary");
+
+      if (isUnavailable && !hasFallenBackRef.current) {
+        hasFallenBackRef.current = true;
+        console.warn("Chat model failed with 503, falling back to gemini-2.5-flash...");
+        try {
+          const fallbackSession = createChatSession(context, "gemini-2.5-flash");
+          setChatSession(fallbackSession);
+          
+          // Re-send the message on the fallback session
+          const result = await fallbackSession.sendMessage({ message: userMsg.text });
+          const responseText = result.text;
+          
+          const botMsg: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'model',
+            text: responseText || "I'm having trouble thinking right now.",
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, botMsg]);
+          setIsLoading(false);
+          return;
+        } catch (fallbackError) {
+          console.error("Fallback chat failed:", fallbackError);
+        }
+      }
+
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',

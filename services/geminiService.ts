@@ -93,6 +93,10 @@ const getApiKey = (): string | null => {
   return process.env.API_KEY || null;
 };
 
+let activeModel = "gemini-3.5-flash";
+
+export const getActiveModel = (): string => activeModel;
+
 export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> => {
   const apiKey = getApiKey();
   if (!apiKey) {
@@ -108,8 +112,6 @@ export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> =
     }
   });
   
-  const model = "gemini-3.5-flash";
-  
   // Prepare parts
   const fileParts = await Promise.all(files.map(fileToGenerativePart));
   
@@ -120,7 +122,7 @@ export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> =
 
   try {
     const response = await ai.models.generateContent({
-      model: model,
+      model: "gemini-3.5-flash",
       contents: {
         role: "user",
         parts: [...fileParts, textPrompt]
@@ -136,15 +138,50 @@ export const analyzeDocuments = async (files: File[]): Promise<AnalysisResult> =
     const text = response.text;
     if (!text) throw new Error("No response from AI");
 
+    activeModel = "gemini-3.5-flash";
     return JSON.parse(text) as AnalysisResult;
 
-  } catch (error) {
+  } catch (error: any) {
+    const errorMsg = error.message || "";
+    const isServiceUnavailable = errorMsg.includes("503") || 
+                                 errorMsg.includes("UNAVAILABLE") || 
+                                 errorMsg.includes("high demand") ||
+                                 errorMsg.includes("temporary");
+    
+    if (isServiceUnavailable) {
+      console.warn("gemini-3.5-flash is experiencing high demand. Falling back to gemini-2.5-flash...");
+      try {
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: {
+            role: "user",
+            parts: [...fileParts, textPrompt]
+          },
+          config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+            responseMimeType: "application/json",
+            responseSchema: responseSchema,
+            temperature: 0.1,
+          }
+        });
+
+        const text = response.text;
+        if (!text) throw new Error("No response from AI");
+
+        activeModel = "gemini-2.5-flash";
+        return JSON.parse(text) as AnalysisResult;
+      } catch (fallbackError) {
+        console.error("Fallback to gemini-2.5-flash failed:", fallbackError);
+        throw fallbackError;
+      }
+    }
+    
     console.error("Analysis failed:", error);
     throw error;
   }
 };
 
-export const createChatSession = (context: AnalysisResult): Chat => {
+export const createChatSession = (context: AnalysisResult, modelOverride?: string): Chat => {
   const apiKey = getApiKey();
   if (!apiKey) {
     throw new Error("API Key is missing. Please set your Gemini API key in the settings menu.");
@@ -171,7 +208,7 @@ export const createChatSession = (context: AnalysisResult): Chat => {
   `;
 
   return ai.chats.create({
-    model: 'gemini-3.5-flash',
+    model: modelOverride || activeModel,
     config: {
       systemInstruction: `${SYSTEM_INSTRUCTION}
 
